@@ -29,7 +29,7 @@ if openai_api_key:
     openai.api_key = openai_api_key
 
 # Configure Google Gemini API
-gemini_api_key = "AIzaSyBt7l_hasZ7bR_1LkJxEMpFKuLxq4M990o"
+gemini_api_key = "enter your gemini api key"
 if gemini_api_key:
     genai.configure(api_key=gemini_api_key)
 
