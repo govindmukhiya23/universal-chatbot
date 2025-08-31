@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Universal Language Support Chatbot</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/rooms.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/game.css') }}">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        /* Context Menu Styles */
+        .context-menu {
+            position: fixed;
+            display: none;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+            padding: 8px 0;
+            z-index: 999999;
+            min-width: 200px;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+            pointer-events: all;
+        }
+
+        .context-menu.show {
+            display: block !important;
+            opacity: 1 !important;
+        }
+
+        .context-menu-item {
+            padding: 10px 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #333;
+            transition: all 0.2s ease;
+            user-select: none;
+        }
+
+        .context-menu-item:hover {
+            background-color: #f0f2ff;
+            color: #667eea;
+        }
+
+        .context-menu-item i {
+            width: 20px;
+            text-align: center;
+            color: #667eea;
+        }
+
+        /* Ensure message content is selectable */
+        .message-content {
+            user-select: text;
+            cursor: text;
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <!-- Header -->
+        <div class="chat-header">
+            <div class="header-info">
+                <h1><i class="fas fa-globe"></i> Universal Chatbot</h1>
+                <span class="status" id="connectionStatus">Connecting...</span>
+            </div>
+            <div class="header-controls">
+                <button class="btn-icon" id="historyBtn" title="View Chat History">
+                    <i class="fas fa-history"></i>
+                </button>
+                <button class="btn-icon" id="settingsBtn" title="Settings">
+                    <i class="fas fa-cog"></i>
+                </button>
+                <button class="btn-icon" id="gameBtn" title="Play Tic Tac Toe">
+                    <i class="fas fa-gamepad"></i>
+                </button>
+                <button class="btn-icon realtime-toggle" id="realtimeToggle" title="Real-time Conversation">
+                    <i class="fas fa-comments"></i>
+                </button>
+                <button class="btn-icon" id="imageGenBtn" title="Generate Images">
+                    <i class="fas fa-image"></i>
+                </button>
+                <button class="btn-icon" id="roomsBtn" title="Virtual Rooms">
+                    <i class="fas fa-users"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Chat Messages -->
+        <div class="chat-messages" id="chatMessages">
+            <div class="welcome-message">
+                <div class="bot-message">
+                    <div class="message-header">
+                        <div class="bot-info">
+                            <i class="fas fa-robot"></i>
+                            <span class="bot-name">AI Assistant</span>
+                        </div>
+                        <span class="message-time">Welcome</span>
+                    </div>
+                    <div class="message-content">
+                        <p><strong>🌍 नमस्ते! Welcome to Universal Language Support Chatbot!</strong></p>
+                        <p>I'm your multilingual AI assistant, ready to help you in <em>any language</em>. Here's what I can do:</p>
+                        
+                        <p><strong>✨ Key Features:</strong></p>
+                        <ul>
+                            <li><strong>🗣️ Multi-Language Chat</strong> - Type or speak in Hindi, English, Spanish, French, Arabic, Chinese, and more!</li>
+                            <li><strong>🔊 Text-to-Speech</strong> - Click the green speaker button below any response to hear it spoken</li>
+                            <li><strong>🎤 Voice Input</strong> - Use the microphone button for hands-free conversation</li>
+                            <li><strong>🌐 Smart Translation</strong> - I respond directly in your preferred language</li>
+                        </ul>
+                        
+                        <p><strong>🚀 Getting Started:</strong></p>
+                        <p>• Click the ⚙️ <em>Settings</em> button to choose your preferred language</p>
+                        <p>• Try asking: "Hello", "नमस्ते", "Hola", "مرحبا", or any question in any language!</p>
+                        <p>• Use short questions for quick answers, detailed questions for comprehensive responses</p>
+                        
+                        <p><strong>Ready to chat? Ask me anything! 🎯</strong></p>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- Input Area -->
+        <div class="chat-input-area">
+            <div class="input-container">
+                <input type="text" id="messageInput" placeholder="Type your message in any language..." maxlength="500">
+                <button class="btn-voice" id="voiceBtn" title="Voice Input">
+                    <i class="fas fa-microphone"></i>
+                </button>
+                <button class="btn-send" id="sendBtn" title="Send Message">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </div>
+            <div class="voice-indicator" id="voiceIndicator">
+                <div class="pulse"></div>
+                <span>Listening...</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div class="modal" id="settingsModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i class="fas fa-cog"></i> Settings</h2>
+                <button class="btn-close" id="closeSettings">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="setting-group">
+                    <label for="userLanguage">Your Language:</label>
+                    <div class="language-selector">
+                        <input type="text" id="userLanguageSearch" class="language-search" placeholder="Search languages..." autocomplete="off">
+                        <div class="language-dropdown" id="userLanguageDropdown">
+                            <!-- Languages will be populated by JavaScript -->
+                        </div>
+                        <input type="hidden" id="userLanguage" value="en">
+                        <div class="selected-language" id="userLanguageSelected">
+                            <span>English</span>
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="setting-group">
+                    <label for="botLanguage">Bot Language:</label>
+                    <div class="language-selector">
+                        <input type="text" id="botLanguageSearch" class="language-search" placeholder="Search languages..." autocomplete="off">
+                        <div class="language-dropdown" id="botLanguageDropdown">
+                            <!-- Languages will be populated by JavaScript -->
+                        </div>
+                        <input type="hidden" id="botLanguage" value="en">
+                        <div class="selected-language" id="botLanguageSelected">
+                            <span>English</span>
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="setting-group">
+                    <label>
+                        <input type="checkbox" id="voiceResponse"> 
+                        Enable voice responses
+                    </label>
+                </div>
+                <div class="setting-group">
+                    <label>
+                        <input type="checkbox" id="autoTranslate" checked> 
+                        Auto-translate messages
+                    </label>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" id="clearHistoryBtn">
+                    <i class="fas fa-trash"></i> Clear History
+                </button>
+                <button class="btn-primary" id="saveSettings">Save Settings</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chat History Modal -->
+    <div class="modal" id="historyModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i class="fas fa-history"></i> Chat History</h2>
+                <button class="btn-close" id="closeHistory">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="history-messages" id="historyMessages">
+                    <!-- Chat history will be loaded here -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" id="clearHistoryBtnModal">
+                    <i class="fas fa-trash"></i> Clear History
+                </button>
+                <button class="btn-primary" id="closeHistoryBtn">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Image Generation Modal -->
+    <div class="modal" id="imageGenModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i class="fas fa-image"></i> Image Generation</h2>
+                <button class="btn-close" id="closeImageGen">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="gen-options">
+                    <div class="option-group">
+                        <label for="genMode">Generation Mode:</label>
+                        <select id="genMode">
+                            <option value="text">Text to Image</option>
+                            <option value="voice">Voice to Image</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <!-- Text Input Section -->
+                <div id="textInputSection" class="gen-section">
+                    <div class="prompt-input">
+                        <label for="imagePrompt">Image Description:</label>
+                        <textarea id="imagePrompt" placeholder="Describe the image you want to generate..." maxlength="500"></textarea>
+                    </div>
+                </div>
+                
+                <!-- Voice Input Section -->
+                <div id="voiceInputSection" class="gen-section" style="display: none;">
+                    <div class="voice-controls">
+                        <button class="btn-voice-large" id="imageVoiceBtn">
+                            <i class="fas fa-microphone"></i>
+                            <span>Click to Record Description</span>
+                        </button>
+                        <div class="voice-indicator" id="imageVoiceIndicator">
+                            <div class="pulse"></div>
+                            <span>Listening...</span>
+                        </div>
+                        <div id="recognizedText" class="recognized-text"></div>
+                    </div>
+                </div>
+                
+                <!-- Generation Controls -->
+                <div class="gen-controls">
+                    <button class="btn-generate" id="generateBtn" disabled>
+                        <i class="fas fa-magic"></i>
+                        <span>Generate Image</span>
+                    </button>
+                    <div class="gen-status" id="genStatus"></div>
+                </div>
+                
+                <!-- Generated Image Display -->
+                <div class="generated-image" id="generatedImage">
+                    <div class="image-container"></div>
+                    <div class="image-actions">
+                        <button class="btn-secondary" id="downloadBtn" style="display: none;">
+                            <i class="fas fa-download"></i> Download
+                        </button>
+                        <button class="btn-secondary" id="shareBtn" style="display: none;">
+                            <i class="fas fa-share"></i> Share in Chat
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Real-time Conversation Modal -->
+    <div class="modal" id="realtimeModal">
+        <div class="modal-content realtime-content">
+            <div class="modal-header">
+                <h2><i class="fas fa-comments"></i> Real-time AI Assistant</h2>
+                <button class="btn-close" id="closeRealtime">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body realtime-body">
+                <!-- Control Panel -->
+                <div class="realtime-controls">
+                    <div class="control-group">
+                        <button class="btn-start-conversation" id="startConversationBtn">
+                            <i class="fas fa-play"></i>
+                            <span>Start AI Conversation</span>
+                        </button>
+                        <button class="btn-stop-conversation" id="stopConversationBtn" style="display: none;">
+                            <i class="fas fa-stop"></i>
+                            <span>Stop Conversation</span>
+                        </button>
+                    </div>
+                    <div class="conversation-status">
+                        <span class="status-indicator" id="conversationStatus">Ready to Start</span>
+                        <div class="status-lights">
+                            <div class="status-light" id="micStatus" title="Microphone"></div>
+                            <div class="status-light" id="aiStatus" title="AI Processing"></div>
+                            <div class="status-light" id="speechStatus" title="Text-to-Speech"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="realtime-container">
+                    <div class="realtime-section user-section">
+                        <h3><i class="fas fa-user"></i> You</h3>
+                        <div class="realtime-messages" id="userRealtimeMessages">
+                            <div class="realtime-message welcome-msg">
+                                <p><strong>🎤 Voice Commands:</strong></p>
+                                <p>• Say "Hello" to start</p>
+                                <p>• Ask questions naturally</p>
+                                <p>• Say "Stop" or "End conversation" to finish</p>
+                            </div>
+                        </div>
+                        <div class="voice-controls">
+                            <button class="btn-voice-large" id="userVoiceBtn" disabled>
+                                <i class="fas fa-microphone"></i>
+                                <span>Click Start to Enable</span>
+                            </button>
+                            <div class="voice-indicator" id="realtimeVoiceIndicator">
+                                <div class="pulse"></div>
+                                <span>Listening...</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="realtime-section bot-section">
+                        <h3><i class="fas fa-robot"></i> AI Assistant</h3>
+                        <div class="realtime-messages" id="botRealtimeMessages">
+                            <div class="realtime-message welcome-msg">
+                                <p><strong>🤖 AI Features:</strong></p>
+                                <p>• Instant voice responses</p>
+                                <p>• Natural conversation flow</p>
+                                <p>• Multi-language support</p>
+                                <p>• Context-aware answers</p>
+                            </div>
+                        </div>
+                        <div class="bot-status">
+                            <i class="fas fa-circle-notch fa-spin" style="display: none;"></i>
+                            <span>Waiting to Start</span>
+                            <button class="btn-speak-response" id="speakResponseBtn" style="display: none;">
+                                <i class="fas fa-volume-up"></i>
+                                <span>Speak Response</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Conversation Settings -->
+                <div class="realtime-settings">
+                    <div class="setting-row">
+                        <label>
+                            <input type="checkbox" id="autoSpeak" checked>
+                            Auto-speak AI responses
+                        </label>
+                        <label>
+                            <input type="checkbox" id="continuousMode">
+                            Continuous listening mode
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Virtual Rooms Modal -->
+    <div class="modal" id="roomsModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i class="fas fa-users"></i> Virtual Rooms</h2>
+                <button class="btn-close" id="closeRooms">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="rooms-container">
+                    <!-- Room Selection -->
+                    <div class="room-selection" id="roomSelection">
+                        <div class="room-options">
+                            <button class="btn-primary room-action-btn" id="createRoomBtn">
+                                <i class="fas fa-plus"></i>
+                                Create New Room
+                            </button>
+                            <button class="btn-secondary room-action-btn" id="joinRoomBtn">
+                                <i class="fas fa-sign-in-alt"></i>
+                                Join Existing Room
+                            </button>
+                        </div>
+                        
+                        <!-- Create Room Form -->
+                        <div class="room-form" id="createRoomForm" style="display: none;">
+                            <h3>Create New Room</h3>
+                            <div class="form-group">
+                                <label for="createRoomName">Your Name:</label>
+                                <input type="text" id="createRoomName" placeholder="Enter your name" maxlength="50">
+                            </div>
+                            <div class="form-group">
+                                <label for="createRoomLanguage">Your Language:</label>
+                                <select id="createRoomLanguage">
+                                    <option value="en">🇺🇸 English</option>
+                                    <option value="hi">🇮🇳 Hindi</option>
+                                    <option value="es">🇪🇸 Spanish</option>
+                                    <option value="fr">🇫🇷 French</option>
+                                    <option value="de">🇩🇪 German</option>
+                                    <option value="zh">🇨🇳 Chinese</option>
+                                    <option value="ja">🇯🇵 Japanese</option>
+                                    <option value="ar">🇸🇦 Arabic</option>
+                                </select>
+                            </div>
+                            <div class="form-actions">
+                                <button class="btn-primary" id="confirmCreateRoom">
+                                    <i class="fas fa-plus"></i> Create Room
+                                </button>
+                                <button class="btn-secondary" id="cancelCreateRoom">Cancel</button>
+                            </div>
+                        </div>
+                        
+                        <!-- Join Room Form -->
+                        <div class="room-form" id="joinRoomForm" style="display: none;">
+                            <h3>Join Existing Room</h3>
+                            <div class="form-group">
+                                <label for="joinRoomPin">Room PIN:</label>
+                                <input type="text" id="joinRoomPin" placeholder="Enter 6-digit PIN" maxlength="6" pattern="[0-9]{6}">
+                            </div>
+                            <div class="form-group">
+                                <label for="joinRoomName">Your Name:</label>
+                                <input type="text" id="joinRoomName" placeholder="Enter your name" maxlength="50">
+                            </div>
+                            <div class="form-group">
+                                <label for="joinRoomLanguage">Your Language:</label>
+                                <select id="joinRoomLanguage">
+                                    <option value="en">🇺🇸 English</option>
+                                    <option value="hi">🇮🇳 Hindi</option>
+                                    <option value="es">🇪🇸 Spanish</option>
+                                    <option value="fr">🇫🇷 French</option>
+                                    <option value="de">🇩🇪 German</option>
+                                    <option value="zh">🇨🇳 Chinese</option>
+                                    <option value="ja">🇯🇵 Japanese</option>
+                                    <option value="ar">🇸🇦 Arabic</option>
+                                </select>
+                            </div>
+                            <div class="form-actions">
+                                <button class="btn-primary" id="confirmJoinRoom">
+                                    <i class="fas fa-sign-in-alt"></i> Join Room
+                                </button>
+                                <button class="btn-secondary" id="cancelJoinRoom">Cancel</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Room Chat Interface -->
+                    <div class="room-chat" id="roomChat" style="display: none;">
+                        <div class="room-header">
+                            <div class="room-info">
+                                <h3>Room: <span id="currentRoomPin"></span></h3>
+                                <div class="room-users" id="roomUsers"></div>
+                            </div>
+                            <button class="btn-secondary" id="leaveRoomBtn">
+                                <i class="fas fa-sign-out-alt"></i> Leave Room
+                            </button>
+                        </div>
+                        
+                        <div class="room-messages" id="roomMessages"></div>
+                        
+                        <div class="room-input">
+                            <input type="text" id="roomMessageInput" placeholder="Type your message..." maxlength="500">
+                            <button class="btn-send" id="sendRoomMessage">
+                                <i class="fas fa-paper-plane"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Context Menu -->
+    <div class="context-menu" id="contextMenu">
+        <div class="context-menu-item" id="askFollowUp">
+            <i class="fas fa-question-circle"></i>
+            Ask follow-up question
+        </div>
+        <div class="context-menu-item" id="askForExplanation">
+            <i class="fas fa-info-circle"></i>
+            Get more details about this
+        </div>
+        <div class="context-menu-item" id="askForExample">
+            <i class="fas fa-lightbulb"></i>
+            Show me an example
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.js"></script>
+    <script src="{{ url_for('static', filename='js/game.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/rooms.js') }}"></script>
+    <script>
+        // Show context menu on text selection
+        document.addEventListener('mouseup', (e) => {
+            setTimeout(() => {
+                const selection = window.getSelection();
+                const selectedText = selection.toString().trim();
+                const contextMenu = document.getElementById('contextMenu');
+                
+                if (!selectedText) {
+                    if (!contextMenu.contains(e.target)) {
+                        contextMenu.classList.remove('show');
+                    }
+                    return;
+                }
+
+                // Check if selection is within a message
+                const messageContent = e.target.closest('.message-content');
+                if (!messageContent) {
+                    return;
+                }
+
+                console.log('Selected text:', selectedText); // Debug log
+                
+                // Get coordinates
+                const range = selection.getRangeAt(0);
+                const rect = range.getBoundingClientRect();
+                
+                // Position menu near the mouse cursor
+                const x = e.clientX;
+                const y = e.clientY;
+                
+                // Ensure menu stays within viewport
+                const menuWidth = 200;
+                const menuHeight = 120;
+                const viewportWidth = window.innerWidth;
+                const viewportHeight = window.innerHeight;
+                
+                let menuX = x + window.scrollX;
+                let menuY = y + window.scrollY;
+                
+                // Adjust if too close to right edge
+                if (x + menuWidth > viewportWidth) {
+                    menuX = viewportWidth - menuWidth + window.scrollX;
+                }
+                
+                // Adjust if too close to bottom edge
+                if (y + menuHeight > viewportHeight) {
+                    menuY = y - menuHeight + window.scrollY;
+                }
+                
+                console.log('Menu position:', menuX, menuY); // Debug log
+                
+                // Set position and show menu
+                contextMenu.style.left = `${menuX}px`;
+                contextMenu.style.top = `${menuY}px`;
+                contextMenu.classList.add('show');
+            }, 0);
+        });
+
+        // Handle clicks outside the menu
+        document.addEventListener('click', (e) => {
+            const contextMenu = document.getElementById('contextMenu');
+            if (!contextMenu.contains(e.target) && !window.getSelection().toString().trim()) {
+                contextMenu.classList.remove('show');
+            }
+        });
+
+        // Handle text selection changes
+        document.addEventListener('selectionchange', () => {
+            console.log('Selection changed'); // Debug log
+            const selection = window.getSelection();
+            const selectedText = selection.toString().trim();
+            
+            if (!selectedText) {
+                const contextMenu = document.getElementById('contextMenu');
+                if (!contextMenu.matches(':hover')) {
+                    contextMenu.classList.remove('show');
+                }
+            }
+        });
+
+        // Handle context menu item clicks
+        document.querySelectorAll('.context-menu-item').forEach(item => {
+            item.addEventListener('click', () => {
+                const selectedText = window.getSelection().toString().trim();
+                if (selectedText) {
+                    const input = document.getElementById('messageInput');
+                    if (input) {
+                        let question = '';
+                        switch (item.id) {
+                            case 'askFollowUp':
+                                question = `Regarding "${selectedText}", can you tell me more about this?`;
+                                break;
+                            case 'askForExplanation':
+                                question = `Can you explain in detail what "${selectedText}" means?`;
+                                break;
+                            case 'askForExample':
+                                question = `Can you give me an example related to "${selectedText}"?`;
+                                break;
+                        }
+                        input.value = question;
+                        input.focus();
+                    }
+                    document.getElementById('contextMenu').classList.remove('show');
+                }
+            });
+        });
+
+        // Prevent default context menu in message content
+        document.addEventListener('contextmenu', (e) => {
+            if (e.target.closest('.message-content')) {
+                e.preventDefault();
+            }
+        });
+    </script>
+</body>
+</html>

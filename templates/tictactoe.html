@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tic Tac Toe - Universal Chatbot</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/tictactoe.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="game-wrapper">
+        <div class="game-container">
+            <div class="game-header">
+                <h1>Tic Tac Toe</h1>
+                <div class="game-info">
+                    <div class="status" id="status">Your turn (X)</div>
+                    <div class="score-board">
+                        <div class="score player">
+                            <span class="label">You (X)</span>
+                            <span class="points" id="player-score">0</span>
+                        </div>
+                        <div class="score ties">
+                            <span class="label">Ties</span>
+                            <span class="points" id="ties-score">0</span>
+                        </div>
+                        <div class="score computer">
+                            <span class="label">AI (O)</span>
+                            <span class="points" id="computer-score">0</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="board-container">
+                <div class="board" id="board">
+                    <div class="cell" data-index="0"></div>
+                    <div class="cell" data-index="1"></div>
+                    <div class="cell" data-index="2"></div>
+                    <div class="cell" data-index="3"></div>
+                    <div class="cell" data-index="4"></div>
+                    <div class="cell" data-index="5"></div>
+                    <div class="cell" data-index="6"></div>
+                    <div class="cell" data-index="7"></div>
+                    <div class="cell" data-index="8"></div>
+                </div>
+            </div>
+
+            <div class="controls">
+                <div class="settings">
+                    <div class="setting-group">
+                        <label for="difficulty">Difficulty:</label>
+                        <select id="difficulty" class="styled-select">
+                            <option value="easy">Easy</option>
+                            <option value="hard">Hard</option>
+                        </select>
+                    </div>
+                    <div class="setting-group">
+                        <label for="language">Language:</label>
+                        <select id="language" class="styled-select">
+                            <option value="en">English</option>
+                            <option value="es">Español</option>
+                            <option value="fr">Français</option>
+                            <option value="de">Deutsch</option>
+                            <option value="hi">हिंदी</option>
+                            <option value="zh">中文</option>
+                            <option value="ja">日本語</option>
+                            <option value="ko">한국어</option>
+                            <option value="ru">Русский</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="buttons">
+                    <button id="newGameBtn" class="btn primary">New Game</button>
+                    <button id="voiceCommandBtn" class="btn secondary">
+                        <img src="{{ url_for('static', filename='images/mic.png') }}" alt="Voice">
+                        Voice Command
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Winning Animation Container -->
+    <div class="win-animation" id="winAnimation">
+        <div class="confetti"></div>
+        <div class="win-message" id="winMessage"></div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+    <script src="{{ url_for('static', filename='js/tictactoe.js') }}"></script>
+</body>
+</html>

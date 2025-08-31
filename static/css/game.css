@@ -1,0 +1,104 @@
+.tic-tac-toe-container {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: #fff;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 0 15px rgba(0,0,0,0.2);
+    z-index: 1000;
+    max-width: 400px;
+    width: 90%;
+}
+
+.tic-tac-toe-container.active {
+    display: block;
+}
+
+.game-board {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin: 20px 0;
+}
+
+.game-cell {
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2em;
+    font-weight: bold;
+    background: #f0f0f0;
+    cursor: pointer;
+    border-radius: 5px;
+    transition: background-color 0.2s;
+}
+
+.game-cell:hover:not(.filled) {
+    background: #e0e0e0;
+}
+
+.game-cell.filled {
+    cursor: not-allowed;
+}
+
+.game-cell.x {
+    color: #2196F3;
+}
+
+.game-cell.o {
+    color: #F44336;
+}
+
+.game-status {
+    text-align: center;
+    margin: 15px 0;
+    font-size: 1.1em;
+    color: #333;
+    min-height: 1.5em;
+}
+
+.game-controls {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.game-controls button {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1em;
+    transition: background-color 0.2s;
+}
+
+.game-controls button.new-game {
+    background: #4CAF50;
+    color: white;
+}
+
+.game-controls button.close-game {
+    background: #f44336;
+    color: white;
+}
+
+.game-controls button:hover {
+    opacity: 0.9;
+}
+
+.difficulty-select {
+    margin-bottom: 15px;
+    text-align: center;
+}
+
+.difficulty-select select {
+    padding: 5px 10px;
+    font-size: 1em;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+}
